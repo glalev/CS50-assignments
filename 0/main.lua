@@ -90,8 +90,8 @@ function love.load()
 
     -- initialize our player paddles; make them global so that they can be
     -- detected by other functions and modules
-    player1 = Paddle(10, 30, 5, 20, false)
-    player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20, true)
+    player1 = Paddle(10, 30, 5, 20, true)
+    player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20, false)
 
     -- place a ball in the middle of the screen
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
@@ -230,43 +230,10 @@ function love.update(dt)
         end
     end
 
-    --
-    -- paddles can move no matter what state we're in
-    --
-    -- player 1
-    -- if love.keyboard.isDown('w') then
-    --     player1.dy = -PADDLE_SPEED
-    -- elseif love.keyboard.isDown('s') then
-    --     player1.dy = PADDLE_SPEED
-    -- else
-    --     player1.dy = 0
-    -- end
-
-    -- update our ball based on its DX and DY only if we're in play state;
-    -- scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then
-      -- TODO add ball isMoving method
-      if ball.x < VIRTUAL_WIDTH / 2 and ball.dx ~= 0 then
-        local direction = player1.y + player1.height / 2 < ball.y and 1 or -1
-        local speed =  math.abs(player1.y + player1.height / 2 - ball.y) < player1.height / 2 and math.min(PADDLE_SPEED, math.abs(ball.dy)) or PADDLE_SPEED
-        -- local speed = math.min(1,(math.abs(player1.y + player1.height - ball.y)) / PADDLE_SPEED / 2) * PADDLE_SPEED
-        player1.dy = direction * speed
-      else
-        player1.dy = 0
-      end
-
-      -- player 2
-      if love.keyboard.isDown('up') then
-          player2.dy = -PADDLE_SPEED
-      elseif love.keyboard.isDown('down') then
-          player2.dy = PADDLE_SPEED
-      else
-          player2.dy = 0
-      end
-
       ball:update(dt)
-      player1:update(dt)
-      player2:update(dt)
+      player1:update(dt, ball)
+      player2:update(dt, ball)
     end
 end
 

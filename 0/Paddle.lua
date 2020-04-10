@@ -31,24 +31,13 @@ function Paddle:init(x, y, width, height, isComputer)
     self.y = y
     self.width = width
     self.height = height
-    self.dy = 0
     self.isComputer = isComputer
 end
 
-function Paddle:update(dt)
-    -- math.max here ensures that we're the greater of 0 or the player's
-    -- current calculated Y position when pressing up so that we don't
-    -- go into the negatives; the movement calculation is simply our
-    -- previously-defined paddle speed scaled by dt
-    if self.dy < 0 then
-        self.y = math.max(0, self.y + self.dy * dt)
-    -- similar to before, this time we use math.min to ensure we don't
-    -- go any farther than the bottom of the screen minus the paddle's
-    -- height (or else it will go partially below, since position is
-    -- based on its top left corner)
-    else
-        self.y = math.min(VIRTUAL_HEIGHT - self.height, self.y + self.dy * dt)
-    end
+function Paddle:update(dt, ball)
+    local velocity = self:getVelocity(ball);
+    local position = self.y + velocity * dt
+    self.y = math.max(0, math.min(VIRTUAL_HEIGHT - self.height, position))
 end
 
 --[[
@@ -61,3 +50,31 @@ end
 function Paddle:render()
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
 end
+
+function Paddle:getVelocity(ball)
+  return self.isComputer and self:getVelocityFromBall(ball) or self:getVelocityFromControls()
+end
+
+function Paddle:getVelocityFromControls()
+  if love.keyboard.isDown('up') then
+    return -PADDLE_SPEED
+  elseif love.keyboard.isDown('down') then
+    return PADDLE_SPEED
+  end
+
+  return 0
+end
+
+function Paddle:getVelocityFromBall(ball)
+  if ball.x >= VIRTUAL_WIDTH / 2 then return 0 end
+
+  local direction = self.y + self.height / 2 < ball.y and 1 or -1
+  local ballDistance = math.abs(self.y + self.height / 2 - ball.y)
+  local adjustedSpeed = (PADDLE_SPEED - math.abs(ball.dy)) * ballDistance / (self.height / 2)
+  local speed = ballDistance < self.height / 2
+    and math.min(PADDLE_SPEED, ball.dy) or PADDLE_SPEED
+  -- local speed = math.min(1,(math.abs(self.y + self.height - ball.y)) / PADDLE_SPEED / 2) * PADDLE_SPEED
+  return direction * speed
+
+end
+
