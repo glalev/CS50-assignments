@@ -26,12 +26,12 @@ Paddle = Class{}
     have their own x, y, width, and height values, thus serving as containers
     for data. In this sense, they're very similar to structs in C.
 ]]
-function Paddle:init(x, y, width, height, isComputer)
+function Paddle:init(x, y, width, height, controls)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
-    self.isComputer = isComputer
+    self.controls = controls
 end
 
 function Paddle:update(dt, ball)
@@ -52,13 +52,13 @@ function Paddle:render()
 end
 
 function Paddle:getVelocity(ball)
-  return self.isComputer and self:getVelocityFromBall(ball) or self:getVelocityFromControls()
+  return not self.controls and self:getVelocityFromBall(ball) or self:getVelocityFromControls()
 end
 
 function Paddle:getVelocityFromControls()
-  if love.keyboard.isDown('up') then
+  if love.keyboard.isDown(self.controls['up']) then
     return -PADDLE_SPEED
-  elseif love.keyboard.isDown('down') then
+  elseif love.keyboard.isDown(self.controls['down']) then
     return PADDLE_SPEED
   end
 
@@ -72,7 +72,7 @@ function Paddle:getVelocityFromBall(ball)
   local ballDistance = math.abs(self.y + self.height / 2 - ball.y)
   local adjustedSpeed = (PADDLE_SPEED - math.abs(ball.dy)) * ballDistance / (self.height / 2)
   local speed = ballDistance < self.height / 2
-    and math.min(PADDLE_SPEED, ball.dy) or PADDLE_SPEED
+    and math.min(PADDLE_SPEED, adjustedSpeed) or PADDLE_SPEED
   -- local speed = math.min(1,(math.abs(self.y + self.height - ball.y)) / PADDLE_SPEED / 2) * PADDLE_SPEED
   return direction * speed
 
