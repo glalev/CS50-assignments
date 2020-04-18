@@ -22,11 +22,11 @@ end
 
 function EndState:render()
   local color = COLORS[self.textColor]
-  love.graphics.setColor(color[1], color[2], color[3], 255)
+  love.graphics.setColor(color())
   love.graphics.setFont(FONTS.huge)
   love.graphics.printf('Player '.. tostring(self.winningPlayer) ..', Win!', 0, 20, VIRTUAL_WIDTH, 'center')
 
-  love.graphics.setColor(COLORS.white[1], COLORS.white[2], COLORS.white[3], 255)
+  love.graphics.setColor(COLORS.white())
   love.graphics.setFont(FONTS.small)
   love.graphics.printf('Press Enter to restart!', 0, VIRTUAL_HEIGHT - 30, VIRTUAL_WIDTH, 'center')
 end

@@ -58,9 +58,9 @@ end
 
 function PlayState:render()
   love.graphics.setFont(FONTS.small)
-  love.graphics.setColor(COLORS.green[1], COLORS.green[2], COLORS.green[3], 255)
+  love.graphics.setColor(COLORS.green())
   love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
-  love.graphics.setColor(COLORS.white[1], COLORS.white[2], COLORS.white[3], 255)
+  love.graphics.setColor(COLORS.white())
 
   gFeatures.leftPlayer:render()
   gFeatures.rightPlayer:render()

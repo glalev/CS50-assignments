@@ -76,12 +76,11 @@ function love.load()
   }
 
   COLORS = {
-    bg = { 46, 52, 64 },
-    green = { 163, 190, 140 },
-    yellow = { 235, 203, 139 },
-    white = { 236, 239, 244 }
+    background = function () return 46, 52, 64, 255 end,
+    green = function () return 163, 190, 140, 255 end,
+    yellow = function () return 235, 203, 139, 255 end,
+    white = function () return 236, 239, 244, 255 end,
   }
-
 
   gFeatures = {
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4),
@@ -123,7 +122,7 @@ end
 
 function love.draw()
   push:start()
-  love.graphics.clear(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], 255)
+  love.graphics.clear(COLORS.background())
   gStateMachine:render()
   push:finish()
 end
