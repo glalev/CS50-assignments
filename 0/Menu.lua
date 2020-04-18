@@ -1,30 +1,17 @@
 
 Menu = Class{}
 
-local hugeFont = love.graphics.newFont('font.ttf', 84)
-local items = {
-  '1 Player',
-  '2 Players',
-}
-
-function Menu:init()
-    self.selected = 1 -- array indexing starts from 1 for some reason
+function Menu:init(items)
+    self.items = items
+    self.selected = 0
 end
 
 function Menu:render()
-  love.graphics.setFont(hugeFont)
-  love.graphics.printf('Pong', 0, 20, VIRTUAL_WIDTH, 'center')
-
-  love.graphics.setFont(smallFont)
-  love.graphics.printf('Press Up/Down to Select, Enter to begin!', 0, 10, VIRTUAL_WIDTH, 'center')
-  love.graphics.printf('Copyright 2020 | Atari, please don\'t sue me', 0, 175, VIRTUAL_WIDTH, 'center')
-
-  love.graphics.setFont(largeFont)
-  for i, item in ipairs(items) do
-    if i == self.selected then
-      love.graphics.setColor(235, 203, 139, 255)
+  for i, item in ipairs(self.items) do
+    if i == self.selected + 1 then
+      love.graphics.setColor(COLORS.yellow[1], COLORS.yellow[2], COLORS.yellow[3], 255)
     else
-        love.graphics.setColor(255, 255, 255, 255)
+        love.graphics.setColor(COLORS.white[1], COLORS.white[2], COLORS.white[3], 255)
     end
 
     love.graphics.printf(item, VIRTUAL_WIDTH / 2 - 40, 110 + i * 20, VIRTUAL_WIDTH, 'left')
@@ -33,9 +20,9 @@ function Menu:render()
 end
 
 function Menu:update()
-  if love.keyboard.isDown('up') and self.selected == 2 then
-    self.selected = 1
-  elseif love.keyboard.isDown('down') and self.selected == 1 then
-    self.selected = 2
+  if love.keyboard.wasPressed('up') then
+    self.selected = (self.selected + 1) % #self.items
+  elseif love.keyboard.wasPressed('down') then
+    self.selected = (self.selected - 1) >= 0 and (self.selected - 1) or #self.items - 1
   end
 end

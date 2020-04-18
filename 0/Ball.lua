@@ -41,12 +41,16 @@ function Ball:collides(paddle)
     -- edge of the other
     if self.y > paddle.y + paddle.height or paddle.y > self.y + self.height then
         return false
-    end 
+    end
 
     -- if the above aren't true, they're overlapping
     return true
 end
 
+function Ball:setVelocity(dx, dy)
+  self.dx = dx
+  self.dy = dy
+end
 --[[
     Places the ball in the middle of the screen, with no movement.
 ]]
