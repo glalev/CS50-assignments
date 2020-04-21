@@ -22,21 +22,30 @@ function PlayState:init()
     self.pipePairs = {}
     self.timer = 0
     self.score = 0
-
+    self.spawnPeriod = 2
+    self.paused = false;
     -- initialize our last recorded Y value for a gap placement to base other gaps off of
     self.lastY = -PIPE_HEIGHT + math.random(80) + 20
 end
 
 function PlayState:update(dt)
+    if love.keyboard.wasPressed('p') then
+        self.paused = not self.paused
+        scrolling = not self.paused
+        if self.paused then sounds['music']:pause() else sounds['music']:resume() end
+    end
+
+    if self.paused then return end
+
     -- update timer for pipe spawning
     self.timer = self.timer + dt
 
     -- spawn a new pipe pair every second and a half
-    if self.timer > 2 then
+    if self.timer > self.spawnPeriod then
         -- modify the last Y coordinate we placed so pipe gaps aren't too far apart
         -- no higher than 10 pixels below the top edge of the screen,
         -- and no lower than a gap length (90 pixels) from the bottom
-        local y = math.max(-PIPE_HEIGHT + 10, 
+        local y = math.max(-PIPE_HEIGHT + 10,
             math.min(self.lastY + math.random(-20, 20), VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT))
         self.lastY = y
 
@@ -45,6 +54,7 @@ function PlayState:update(dt)
 
         -- reset timer
         self.timer = 0
+        self.spawnPeriod = math.random(15, 35) / 10
     end
 
     -- for every pair of pipes..
@@ -110,6 +120,13 @@ function PlayState:render()
     love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
     self.bird:render()
+
+    if self.paused then
+        local w = 20
+        local h = 80
+        love.graphics.rectangle('fill', VIRTUAL_WIDTH / 2 - w, VIRTUAL_HEIGHT / 2 - h/2, w, h)
+        love.graphics.rectangle('fill',VIRTUAL_WIDTH / 2 + w, VIRTUAL_HEIGHT / 2 - h/2, w, h)
+    end
 end
 
 --[[

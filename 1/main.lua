@@ -42,6 +42,7 @@ require 'states/TitleScreenState'
 require 'Bird'
 require 'Pipe'
 require 'PipePair'
+require 'Medal'
 
 -- physical screen dimensions
 WINDOW_WIDTH = 1280
@@ -50,6 +51,8 @@ WINDOW_HEIGHT = 720
 -- virtual resolution dimensions
 VIRTUAL_WIDTH = 512
 VIRTUAL_HEIGHT = 288
+
+scrolling = true
 
 local background = love.graphics.newImage('background.png')
 local backgroundScroll = 0
@@ -91,8 +94,8 @@ function love.load()
     }
 
     -- kick off music
-    -- sounds['music']:setLooping(true)
-    -- sounds['music']:play()
+    sounds['music']:setLooping(true)
+    sounds['music']:play()
 
     -- initialize our virtual resolution
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
@@ -155,9 +158,10 @@ end
 
 function love.update(dt)
     -- scroll our background and ground, looping back to 0 after a certain amount
-    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
-    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
-
+    if scrolling then
+        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    end
     gStateMachine:update(dt)
 
     love.keyboard.keysPressed = {}
