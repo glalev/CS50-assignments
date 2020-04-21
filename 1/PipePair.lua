@@ -11,7 +11,7 @@
 PipePair = Class{}
 
 -- size of the gap between pipes
-local GAP_HEIGHT = { min = 70, max = 110 }
+local GAP_HEIGHT = { min = 80, max = 120 }
 
 function PipePair:init(y)
     -- flag to hold whether this pair has been scored (jumped through)
