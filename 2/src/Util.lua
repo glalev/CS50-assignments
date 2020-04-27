@@ -41,12 +41,36 @@ end
 ]]
 function table.slice(tbl, first, last, step)
     local sliced = {}
-  
+
     for i = first or 1, last or #tbl, step or 1 do
       sliced[#sliced+1] = tbl[i]
     end
-  
+
     return sliced
+end
+
+-- Concatenate two arrays, treating every non-table value as an array with one element /this value/
+-- NOTE If a table which is not array is passed the same is ignored in
+function table.concat(a, b)
+    local tbl1 = type(a) == 'table' and a or {a}
+    local tbl2 = type(b) == 'table' and b or {b}
+    local result = table.slice(tbl1)
+    for i = 1, #tbl2 do
+        table.insert(result, tbl2[i])
+    end
+
+    return result
+end
+
+function table.filter(arr, predicate)
+    local result = {}
+    for i, element in ipairs(arr) do
+        if predicate(element, i) then
+            table.insert(result, element)
+        end
+    end
+
+    return result;
 end
 
 --[[
