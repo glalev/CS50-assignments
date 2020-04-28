@@ -20,6 +20,7 @@ PlayState = Class{__includes = BaseState}
     We initialize what's in our PlayState via a state table that we pass between
     states as we go from playing to serving.
 ]]
+
 function PlayState:enter(params)
     self.paddle = params.paddle
     self.bricks = params.bricks
@@ -29,6 +30,7 @@ function PlayState:enter(params)
     -- self.ball = params.ball
     self.level = params.level
     self.balls = { params.ball }
+    self.powerUps = {}
 
     self.recoverPoints = 5000
 
@@ -62,12 +64,24 @@ function PlayState:update(dt)
 
     -- print(#self.balls)
 
-    if love.keyboard.wasPressed('p') then
-        self:addBalls()
-    end
+    -- if love.keyboard.wasPressed('p') then
+    --     self:addBalls()
+    -- end
 
     -- update positions based on velocity
     self.paddle:update(dt)
+
+    for i, powerUp in ipairs(self.powerUps) do
+        powerUp:update(dt)
+
+        local powerUpWasHit = powerUp:collides(self.paddle)
+
+        if powerUpWasHit then powerUp.action(self) end
+        if powerUpWasHit or powerUp.y >= VIRTUAL_HEIGHT then
+            self.powerUps = table.filter(self.powerUps, function (p) return p ~= powerUp end)
+        end
+    end
+
     for i, ball in ipairs(self.balls) do
         ball:update(dt)
 
@@ -84,7 +98,10 @@ function PlayState:update(dt)
                 -- trigger the brick's hit function, which removes it from play
                 brick:hit()
                 ball:hitBrick(brick)
-
+                if not brick.inPlay and brick.powerUp then
+                    -- 8 is half of the powerUp sprite width, and I am too lazy to put it as a variable somewhere
+                    table.insert(self.powerUps, PowerUp(brick.x + brick.width / 2 - 8, brick.y, brick.powerUp))
+                end
                 -- add to score
                 self.score = self.score + (brick.tier * 200 + brick.color * 25)
                 -- if we have enough points, recover a point of health
@@ -131,7 +148,7 @@ function PlayState:update(dt)
             })
         end
     end
-    
+
     -- go to our victory screen if there are no more bricks left
     if self:checkVictory() then
         gSounds['victory']:play()
@@ -175,6 +192,10 @@ function PlayState:render()
         ball:render()
     end
 
+    for _, powerUp in ipairs(self.powerUps) do
+        powerUp:render()
+    end
+
     renderScore(self.score)
     renderHealth(self.health)
 
@@ -186,23 +207,11 @@ function PlayState:render()
 end
 
 function PlayState:checkVictory()
-    for k, brick in pairs(self.bricks) do
-        if brick.inPlay then
-            return false
-        end
-    end
-    return true
-end
-
-function PlayState:addBalls()
-    local skin = self.balls[1].skin
-    for i = 1, 3 - #self.balls do
-        local ball = Ball(skin)
-        ball.x = self.paddle.x + (self.paddle.width / 2) - 4
-        ball.y = self.paddle.y - 8
-        ball.dx = math.random(-200, 200)
-        ball.dy = math.random(-50, -60)
-
-        table.insert(self.balls, ball)
-    end
+    return #table.filter(self.bricks, function(b) return b.inPlay end) == 0
+    -- for k, brick in pairs(self.bricks) do
+    --     if brick.inPlay then
+    --         return false
+    --     end
+    -- end
+    -- return true
 end
