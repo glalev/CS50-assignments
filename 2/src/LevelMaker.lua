@@ -21,10 +21,30 @@ MULTI_PYRAMID = 3
 SOLID = 1           -- all colors the same in this row
 ALTERNATE = 2       -- alternate colors
 SKIP = 3            -- skip every other block
-NONE = 4            -- no blocks this row
+NONE = 4
+POWER_UP_CHANCE = 0.1 -- all power-ups have an equal chance to appear, not the best approach probably but for our purposes, it's enough
+LOCKED_CHANCE = 0.5   -- chance of having locked tile/s
+LOCKED_FREQUENCY = 0.1 -- what percent of the tiles are locked
 
 LevelMaker = Class{}
 
+function addPowerUps(bricks, locked, powerUps)
+    -- if there is a locked bricks at least one of the bricks should have unlock power up
+    if locked.hasBrick then
+        local notLocketBricks = table.filter(bricks, function(brick) return not brick.isLocked end)
+        local lockedIndex = math.random(1, #bricks)
+        bricks[lockedIndex].powerUp = 'unlock'
+    end
+
+    for _, brick in ipairs(bricks)  do
+        if not brick.powerUp and math.random() < POWER_UP_CHANCE then
+            local powUpIndex = math.random(1, #powerUps)
+            brick.powerUp = powerUps[powUpIndex]
+        end
+    end
+
+    return bricks
+end
 --[[
     Creates a table of Bricks to be returned to the main game, with different
     possible ways of randomizing rows and columns of bricks. Calculates the
@@ -32,10 +52,16 @@ LevelMaker = Class{}
 ]]
 function LevelMaker.createMap(level)
     local bricks = {}
-
+    local locked = {
+        enabled = math.random() < LOCKED_CHANCE,
+        hasBrick = false,
+    }
     -- randomly choose the number of rows
     local numRows = math.random(2, 2)
-
+    -- if the locked bricks are not enabled only the other power ups are returned
+    local powerUps = table.filter(table.keys(PowerUp.TYPES), function (type)
+        return type ~= 'unlock' or locked.enabled
+    end);
     -- randomly choose the number of columns, ensuring odd
     local numCols = math.random(2, 2)
     numCols = numCols % 2 == 0 and (numCols + 1) or numCols
@@ -111,9 +137,11 @@ function LevelMaker.createMap(level)
                 b.color = solidColor
                 b.tier = solidTier
             end
-
+            b.isLocked = locked.enabled and math.random() < LOCKED_FREQUENCY
+            -- remembering if at least one brick was locked
+            locked.hasBrick = locked.hasBrick or b.isLocked
             table.insert(bricks, b)
-
+            bricks = addPowerUps(bricks, locked, powerUps)
             -- Lua's version of the 'continue' statement
             ::continue::
         end

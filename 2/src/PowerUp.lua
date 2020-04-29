@@ -1,7 +1,7 @@
 
 PowerUp = Class{}
 
-local TYPES = {
+PowerUp.TYPES = {
     addBalls = {
         skin = 6,
         action = function (state)
@@ -16,14 +16,25 @@ local TYPES = {
                 table.insert(state.balls, ball)
             end
         end
+    },
+    unlock = {
+        skin = 9,
+        action = function (state)
+            for _, brick in ipairs(state.bricks) do
+                brick.isLocked = false;
+                if brick.powerUp == 'unlock' then
+                    brick.powerUp = nil
+                end
+            end
+        end
     }
 }
 
 function PowerUp:init(x, y, type)
     self.x = x
     self.y = y
-    self.skin = TYPES[type].skin
-    self.action = TYPES[type].action
+    self.skin = PowerUp.TYPES[type].skin
+    self.action = PowerUp.TYPES[type].action
     self.dy = 70
     self.width = 16
     self.height = 16

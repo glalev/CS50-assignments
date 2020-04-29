@@ -73,13 +73,39 @@ function table.filter(arr, predicate)
     return result;
 end
 
+function table.map(arr, func)
+    local result = {}
+
+    for i, element in ipairs(arr) do
+        table.insert(result, func(element, i, arr))
+    end
+
+    return result
+end
+
+function table.keys(table)
+    local keys = { }
+    local n = 0
+
+    for k, v in pairs(table) do
+      n = n + 1
+      keys[n]=k
+    end
+
+    return keys
+end
+
 --[[
     This function is specifically made to piece out the bricks from the
     sprite sheet. Since the sprite sheet has non-uniform sprites within,
     we have to return a subset of GenerateQuads.
 ]]
 function GenerateQuadsBricks(atlas)
-    return table.slice(GenerateQuads(atlas, 32, 16), 1, 21)
+    local quads = GenerateQuads(atlas, 32, 16)
+    local brickQuads = table.slice(quads, 1, 21)
+    local lockedBrick = quads[24]
+
+    return table.concat(brickQuads, lockedBrick)
 end
 
 --[[

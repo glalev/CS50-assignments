@@ -33,6 +33,7 @@ function PlayState:enter(params)
     self.powerUps = {}
 
     self.recoverPoints = 5000
+    self.expandPoints = 8000
 
     -- give ball random starting velocity
     self.balls[1].dx = math.random(-200, 200)
@@ -112,10 +113,19 @@ function PlayState:update(dt)
                     -- multiply recover points by 2
                     self.recoverPoints = math.min(100000, self.recoverPoints * 2)
 
+                    self.paddle:expand()
+
                     -- play recover sound effect
                     gSounds['recover']:play()
                 end
 
+                if self.score > self.expandPoints then
+                    -- multiply expand points by 2.5
+                    self.expandPoints = math.min(100000, self.expandPoints * 2.5)
+                    print(self.expandPoints)
+
+                    self.paddle:expand()
+                end
 
                 break
             end
@@ -129,6 +139,7 @@ function PlayState:update(dt)
 
     if #self.balls == 0 then
         self.health = self.health - 1
+        self.paddle:shrink()
         gSounds['hurt']:play()
 
         if self.health == 0 then

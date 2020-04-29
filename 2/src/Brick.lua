@@ -59,7 +59,8 @@ function Brick:init(x, y)
     self.y = y
     self.width = 32
     self.height = 16
-    self.powerUp = 'addBalls';
+    self.powerUp = nil
+    self.isLocked = false
     -- used to determine whether this brick should be rendered
     self.inPlay = true
 
@@ -85,6 +86,10 @@ end
     changing its color otherwise.
 ]]
 function Brick:hit()
+    if self.isLocked then
+        -- TODO add some sound here
+        return
+    end
     -- set the particle system to interpolate between two colors; in this case, we give
     -- it our self.color but with varying alpha; brighter for higher tiers, fading to 0
     -- over the particle's lifetime (the second color)
@@ -135,11 +140,10 @@ end
 
 function Brick:render()
     if self.inPlay then
-        love.graphics.draw(gTextures['main'],
-            -- multiply color by 4 (-1) to get our color offset, then add tier to that
-            -- to draw the correct tier and color brick onto the screen
-            gFrames['bricks'][1 + ((self.color - 1) * 4) + self.tier],
-            self.x, self.y)
+        -- multiply color by 4 (-1) to get our color offset, then add tier to that
+        -- to draw the correct tier and color brick onto the screen
+        local skin = self.isLocked and #gFrames['bricks'] or 1 + ((self.color - 1) * 4) + self.tier
+        love.graphics.draw(gTextures['main'],gFrames['bricks'][skin], self.x, self.y)
     end
 end
 
