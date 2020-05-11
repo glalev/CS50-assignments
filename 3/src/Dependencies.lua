@@ -28,6 +28,7 @@ Timer = require 'lib/knife.timer'
 -- utility
 require 'src/StateMachine'
 require 'src/Util'
+require 'src/UtilCollections'
 
 -- game pieces
 require 'src/Board'
@@ -56,7 +57,7 @@ gTextures = {
 }
 
 gFrames = {
-    
+
     -- divided into sets for each tile type in this game, instead of one large
     -- table of Quads
     ['tiles'] = GenerateTileQuads(gTextures['main'])
