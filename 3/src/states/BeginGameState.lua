@@ -29,7 +29,7 @@ function BeginGameState:enter(def)
     self.level = def.level
 
     -- spawn a board and place it toward the right
-    self.board = Board(VIRTUAL_WIDTH - 272, 16, def.level)
+    self.board = Board(VIRTUAL_WIDTH - 272, 16, def.level, TILES_COLORS)
     --
     -- animate our white screen fade-in, then animate a drop-down with
     -- the level text

@@ -17,7 +17,7 @@ local positions = {}
 StartState = Class{__includes = BaseState}
 
 function StartState:init()
-    
+
     -- currently selected menu item
     self.currentMenuItem = 1
 
@@ -43,7 +43,7 @@ function StartState:init()
 
     -- time for a color change if it's been half a second
     self.colorTimer = Timer.every(0.075, function()
-        
+
         -- shift every color to the next, looping the last to front
         -- assign it to 0 so the loop below moves it to 1, default start
         self.colors[0] = self.colors[6]
@@ -53,10 +53,7 @@ function StartState:init()
         end
     end)
 
-    -- generate full table of tiles just for display
-    for i = 1, 64 do
-        table.insert(positions, gFrames['tiles'][math.random(18)][math.random(6)])
-    end
+    self.board = Board(VIRTUAL_WIDTH - 384, 16, 6, TILES_COLORS)
 
     -- used to animate our full-screen transition rect
     self.transitionAlpha = 0
@@ -72,7 +69,7 @@ function StartState:update(dt)
 
     -- as long as can still input, i.e., we're not in a transition...
     if not self.pauseInput then
-        
+
         -- change menu selection
         if love.keyboard.wasPressed('up') or love.keyboard.wasPressed('down') then
             self.currentMenuItem = self.currentMenuItem == 1 and 2 or 1
@@ -82,7 +79,7 @@ function StartState:update(dt)
         -- switch to another state via one of the menu options
         if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
             if self.currentMenuItem == 1 then
-                
+
                 -- tween, using Timer, the transition rect's alpha to 255, then
                 -- transition to the BeginGame state after the animation is over
                 Timer.tween(1, {
@@ -109,22 +106,24 @@ function StartState:update(dt)
 end
 
 function StartState:render()
-    
-    -- render all tiles and their drop shadows
-    for y = 1, 8 do
-        for x = 1, 8 do
-            
-            -- render shadow first
-            love.graphics.setColor(0, 0, 0, 255)
-            love.graphics.draw(gTextures['main'], positions[(y - 1) * x + x], 
-                (x - 1) * 32 + 128 + 3, (y - 1) * 32 + 16 + 3)
 
-            -- render tile
-            love.graphics.setColor(255, 255, 255, 255)
-            love.graphics.draw(gTextures['main'], positions[(y - 1) * x + x], 
-                (x - 1) * 32 + 128, (y - 1) * 32 + 16)
-        end
-    end
+    -- -- render all tiles and their drop shadows
+    -- for y = 1, 8 do
+    --     for x = 1, 8 do
+    --
+    --         -- render shadow first
+    --         love.graphics.setColor(0, 0, 0, 255)
+    --         love.graphics.draw(gTextures['main'], positions[(y - 1) * x + x],
+    --             (x - 1) * 32 + 128 + 3, (y - 1) * 32 + 16 + 3)
+    --
+    --         -- render tile
+    --         love.graphics.setColor(255, 255, 255, 255)
+    --         love.graphics.draw(gTextures['main'], positions[(y - 1) * x + x],
+    --             (x - 1) * 32 + 128, (y - 1) * 32 + 16)
+    --     end
+    -- end
+
+    self.board:render()
 
     -- keep the background and tiles a little darker than normal
     love.graphics.setColor(0, 0, 0, 128)
@@ -143,7 +142,7 @@ end
     axis as needed, relative to the center.
 ]]
 function StartState:drawMatch3Text(y)
-    
+
     -- draw semi-transparent rect behind MATCH 3
     love.graphics.setColor(255, 255, 255, 128)
     love.graphics.rectangle('fill', VIRTUAL_WIDTH / 2 - 76, VIRTUAL_HEIGHT / 2 + y - 11, 150, 58, 6)
@@ -164,7 +163,7 @@ end
     Draws "Start" and "Quit Game" text over semi-transparent rectangles.
 ]]
 function StartState:drawOptions(y)
-    
+
     -- draw rect behind start and quit game text
     love.graphics.setColor(255, 255, 255, 128)
     love.graphics.rectangle('fill', VIRTUAL_WIDTH / 2 - 76, VIRTUAL_HEIGHT / 2 + y, 150, 58, 6)
@@ -172,25 +171,25 @@ function StartState:drawOptions(y)
     -- draw Start text
     love.graphics.setFont(gFonts['medium'])
     self:drawTextShadow('Start', VIRTUAL_HEIGHT / 2 + y + 8)
-    
+
     if self.currentMenuItem == 1 then
         love.graphics.setColor(99, 155, 255, 255)
     else
         love.graphics.setColor(48, 96, 130, 255)
     end
-    
+
     love.graphics.printf('Start', 0, VIRTUAL_HEIGHT / 2 + y + 8, VIRTUAL_WIDTH, 'center')
 
     -- draw Quit Game text
     love.graphics.setFont(gFonts['medium'])
     self:drawTextShadow('Quit Game', VIRTUAL_HEIGHT / 2 + y + 33)
-    
+
     if self.currentMenuItem == 2 then
         love.graphics.setColor(99, 155, 255, 255)
     else
         love.graphics.setColor(48, 96, 130, 255)
     end
-    
+
     love.graphics.printf('Quit Game', 0, VIRTUAL_HEIGHT / 2 + y + 33, VIRTUAL_WIDTH, 'center')
 end
 
