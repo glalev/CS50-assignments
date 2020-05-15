@@ -24,8 +24,9 @@ function Tile:init(x, y, color, type)
     self.y = (self.gridY - 1) * 32
 
     -- tile appearance/points
+    self.isSpecial = math.random() > 0.5
     self.color = color
-    self.type = type
+    self.type = self.isSpecial and type or 6
     self.points = POINTS[type]
 end
 

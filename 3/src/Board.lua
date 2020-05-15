@@ -11,13 +11,60 @@
     sets of three horizontally or vertically.
 ]]
 
+local getMatchesFromRow = function(row, matches)
+    local seq = {}
+    local c = #matches + 1
+
+    for i, tile in ipairs(row) do
+        local hasToBreak = (#seq ~=0 and tile.color ~= seq[1].color) or i == #row
+        local hasToInsert = #seq == 0 or tile.color == seq[1].color
+        if hasToInsert then
+            table.insert(seq, tile)
+        end
+
+        if hasToBreak then
+            if (#seq > 2) then
+                matches[c] = seq
+                c = c + 1
+            end
+            seq = { tile }
+        end
+    end
+
+    return matches
+end
+
+local getMatchesFromColumn = function (columnIndex, t, matches)
+    local seq = {}
+    local c = #matches + 1
+
+    for i = 1, #t do
+        local tile = t[i][columnIndex]
+        local hasToBreak = (#seq ~=0 and tile.color ~= seq[1].color) or i == #t
+        local hasToInsert = #seq == 0 or tile.color == seq[1].color
+        if hasToInsert then
+            table.insert(seq, tile)
+        end
+
+        if hasToBreak then
+            if (#seq > 2) then
+                matches[c] = seq
+                c = c + 1
+            end
+            seq = { tile }
+        end
+    end
+    --
+    return matches
+end
+
 Board = Class{}
 
 function Board:init(x, y, level, colors)
     self.x = x
     self.y = y
     self.matches = {}
-    self.maxLevel = math.min(6, math.ceil(level / 1.9))
+    self.maxLevel = math.min(5, math.ceil(level / 1.9))
     self.colors = colors
     -- print(self.colors)
     self:initializeTiles(level)
@@ -53,112 +100,16 @@ end
     last two haven't been a match.
 ]]
 function Board:calculateMatches()
-    local matches = {}
-
-    -- how many of the same color blocks in a row we've found
-    local matchNum = 1
-
-    -- horizontal matches first
-    for y = 1, 8 do
-        local colorToMatch = self.tiles[y][1].color
-
-        matchNum = 1
-
-        -- every horizontal tile
-        for x = 2, 8 do
-
-            -- if this is the same color as the one we're trying to match...
-            if self.tiles[y][x].color == colorToMatch then
-                matchNum = matchNum + 1
-            else
-
-                -- set this as the new color we want to watch for
-                colorToMatch = self.tiles[y][x].color
-
-                -- if we have a match of 3 or more up to now, add it to our matches table
-                if matchNum >= 3 then
-                    local match = {}
-
-                    -- go backwards from here by matchNum
-                    for x2 = x - 1, x - matchNum, -1 do
-
-                        -- add each tile to the match that's in that match
-                        table.insert(match, self.tiles[y][x2])
-                    end
-
-                    -- add this match to our total matches table
-                    table.insert(matches, match)
-                end
-
-                matchNum = 1
-
-                -- don't need to check last two if they won't be in a match
-                if x >= 7 then
-                    break
-                end
-            end
-        end
-
-        -- account for the last row ending with a match
-        if matchNum >= 3 then
-            local match = {}
-
-            -- go backwards from end of last row by matchNum
-            for x = 8, 8 - matchNum + 1, -1 do
-                table.insert(match, self.tiles[y][x])
-            end
-
-            table.insert(matches, match)
-        end
-    end
-
-    -- vertical matches
-    for x = 1, 8 do
-        local colorToMatch = self.tiles[1][x].color
-
-        matchNum = 1
-
-        -- every vertical tile
-        for y = 2, 8 do
-            if self.tiles[y][x].color == colorToMatch then
-                matchNum = matchNum + 1
-            else
-                colorToMatch = self.tiles[y][x].color
-
-                if matchNum >= 3 then
-                    local match = {}
-
-                    for y2 = y - 1, y - matchNum, -1 do
-                        table.insert(match, self.tiles[y2][x])
-                    end
-
-                    table.insert(matches, match)
-                end
-
-                matchNum = 1
-
-                -- don't need to check last two if they won't be in a match
-                if y >= 7 then
-                    break
-                end
-            end
-        end
-
-        -- account for the last column ending with a match
-        if matchNum >= 3 then
-            local match = {}
-
-            -- go backwards from end of last row by matchNum
-            for y = 8, 8 - matchNum + 1, -1 do
-                table.insert(match, self.tiles[y][x])
-            end
-
-            table.insert(matches, match)
-        end
-    end
-
+    local verticalMathces = table.reduce(self.tiles[1], function(acc, _, columnIndex)
+        -- gets all the matches from every single column, and concatenate them in one table
+        return getMatchesFromColumn(columnIndex, self.tiles, acc)
+    end, {})
     -- store matches for later reference
-    self.matches = matches
+    self.matches = table.reduce(self.tiles, function(acc, row)
+        -- gets all the matches from every single row,
+        -- and concatenate them with the already found vertical matches
+        return getMatchesFromRow(row, acc)
+    end, verticalMathces)
 
     -- return matches table if > 0, else just return false
     return #self.matches > 0 and self.matches or false
