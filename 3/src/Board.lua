@@ -11,9 +11,20 @@
     sets of three horizontally or vertically.
 ]]
 
-local getMatchesFromRow = function(row, matches)
+function hasSpecialTile (arr)
+    return table.reduce(arr, function(hasSpecial, tile)
+        if hasSpecial then return true end
+        if type(tile.isSpecial) == 'boolean' then
+            return tile.isSpecial
+        else
+            return hasSpecialTile(tile)
+        end
+    end, false)
+end
+
+function getMatchesFromRow(row, matches)
     local seq = {}
-    local c = #matches + 1
+    local rowMatches = {}
 
     for i, tile in ipairs(row) do
         local hasToBreak = (#seq ~=0 and tile.color ~= seq[1].color) or i == #row
@@ -24,38 +35,43 @@ local getMatchesFromRow = function(row, matches)
 
         if hasToBreak then
             if (#seq > 2) then
-                matches[c] = seq
-                c = c + 1
+                table.insert(rowMatches, seq)
             end
             seq = { tile }
         end
     end
 
-    return matches
+    local finalMatches = hasSpecialTile(rowMatches) and { row } or rowMatches
+
+    return table.concat(matches, finalMatches)
 end
 
-local getMatchesFromColumn = function (columnIndex, t, matches)
+function getMatchesFromColumn(columnIndex, t, matches)
     local seq = {}
-    local c = #matches + 1
+    local columnMatches = {}
+    local column = {}
 
     for i = 1, #t do
         local tile = t[i][columnIndex]
         local hasToBreak = (#seq ~=0 and tile.color ~= seq[1].color) or i == #t
         local hasToInsert = #seq == 0 or tile.color == seq[1].color
+
+        column[i] = tile
         if hasToInsert then
             table.insert(seq, tile)
         end
 
         if hasToBreak then
             if (#seq > 2) then
-                matches[c] = seq
-                c = c + 1
+                table.insert(columnMatches, seq)
             end
             seq = { tile }
         end
     end
-    --
-    return matches
+
+    local finalMatches = hasSpecialTile(columnMatches) and { column } or columnMatches
+
+    return table.concat(matches, finalMatches)
 end
 
 Board = Class{}
@@ -66,7 +82,6 @@ function Board:init(x, y, level, colors)
     self.matches = {}
     self.maxLevel = math.min(5, math.ceil(level / 1.9))
     self.colors = colors
-    -- print(self.colors)
     self:initializeTiles(level)
 end
 

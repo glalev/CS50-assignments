@@ -100,7 +100,7 @@ end
 function table.reduce(arr, callback, initialValue)
     local acc
 
-    if (initialValue) then
+    if (initialValue ~= nil) then
         acc = initialValue
         for i = 1, #arr do
             acc = callback(acc, arr[i], i, arr)
