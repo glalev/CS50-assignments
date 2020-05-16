@@ -26,8 +26,9 @@ function Tile:init(x, y, color, type)
     -- tile appearance/points
     self.isSpecial = math.random() > 0.9
     self.color = color
-    self.type = self.isSpecial and type or 6
+    self.type = self.isSpecial and 6 or type
     self.points = POINTS[type]
+    self.shine = {value = 80, direction = 1, step = 1.5, max = 250, min = 80}
 end
 
 function Tile:render(x, y)
@@ -41,4 +42,20 @@ function Tile:render(x, y)
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.type],
         self.x + x, self.y + y)
+
+    if (self.isSpecial) then
+        local step = (self.shine.max - self.shine.value) / 100 + 1
+        self.shine.value = self.shine.value + self.shine.direction * step
+        if self.shine.value >= self.shine.max or self.shine.value <= self.shine.min then
+            self.shine.direction = -self.shine.direction
+        end
+        love.graphics.setBlendMode('add')
+
+        love.graphics.setColor(255, 255, 255, self.shine.value)
+        love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.type],
+            self.x + x, self.y + y)
+
+        -- back to alpha
+        love.graphics.setBlendMode('alpha')
+    end
 end
