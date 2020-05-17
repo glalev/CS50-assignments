@@ -33,6 +33,8 @@ function PlayState:init()
     -- flag to show whether we're able to process input (not swapping or clearing)
     self.canInput = true
 
+    self.direction = nil
+
     -- tile we're currently highlighting (preparing to swap)
     self.highlightedTile = nil
 
@@ -74,7 +76,6 @@ function PlayState:update(dt)
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
     end
-
     -- go back to start if time runs out
     if self.timer <= 0 then
 
@@ -109,40 +110,44 @@ function PlayState:update(dt)
         -- move cursor around based on bounds of grid, playing sounds
         if love.keyboard.wasPressed('up') then
             self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
+            self.direction = {'up', 'down'}
             gSounds['select']:play()
         elseif love.keyboard.wasPressed('down') then
             self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
+            self.direction = {'down', 'up'}
             gSounds['select']:play()
         elseif love.keyboard.wasPressed('left') then
             self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
+            self.direction = {'left', 'right'}
             gSounds['select']:play()
         elseif love.keyboard.wasPressed('right') then
             self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
+            self.direction = {'right', 'left'}
             gSounds['select']:play()
         end
 
         -- if we've pressed enter, to select or deselect a tile...
-        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        if love.keyboard.wasPressed('space') or love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
 
             -- if same tile as currently highlighted, deselect
             local x = self.boardHighlightX + 1
             local y = self.boardHighlightY + 1
+            local hasMatch =
+                self.board:hasPotentialMatches(self.highlightedTile, self.direction[1]) or
+                self.board:hasPotentialMatches(self.board.tiles[y][x], self.direction[2])
 
             -- if nothing is highlighted, highlight current tile
             if not self.highlightedTile then
                 self.highlightedTile = self.board.tiles[y][x]
-
             -- if we select the position already highlighted, remove highlight
             elseif self.highlightedTile == self.board.tiles[y][x] then
                 self.highlightedTile = nil
-
             -- if the difference between X and Y combined of this highlighted tile
             -- vs the previous is not equal to 1, also remove highlight
-            elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 then
+            elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 or not hasMatch then
                 gSounds['error']:play()
                 self.highlightedTile = nil
             else
-
                 -- swap grid positions of tiles
                 local tempX = self.highlightedTile.gridX
                 local tempY = self.highlightedTile.gridY
@@ -217,6 +222,10 @@ function PlayState:calculateMatches()
 
     -- if no matches, we can continue playing
     else
+        if not self.board:hasMatches() then
+            local tilesToFall = self.board:reset()
+            Timer.tween(0.25, tilesToFall)
+        end
         self.canInput = true
     end
 end

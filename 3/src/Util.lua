@@ -54,5 +54,5 @@ end
 function GetTilesColorsCount(atlas)
     local atlasWidth, atlasHeight = atlas:getDimensions()
 
-    return atlasHeight / 32
+    return atlasHeight / 32 * atlasWidth / 32 / 6
 end

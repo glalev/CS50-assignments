@@ -74,6 +74,91 @@ function getMatchesFromColumn(columnIndex, t, matches)
     return table.concat(matches, finalMatches)
 end
 
+
+function areValidAddresses(addresses, range)
+    return table.reduce(addresses, function(isValid, a)
+        return isValid and (a[1] >= 1 and a[1] <= range[1] and a[2] >= 1 and a[2] <= range[2])
+    end, true)
+end
+
+function getPotentials(address, board, direction)
+    local i = address[1]
+    local j = address[2]
+
+    local allcouples = {
+        left = {
+            {{i-1, j-2}, {i-1, j-1}},   -- top left
+            {{i+1, j-2}, {i+1, j-1}},   -- bottom left
+            {{i,   j-2}, {i,   j-3}},   -- line left
+            {{i-1, j-1}, {i-2, j-1}},   -- left top
+            {{i-1, j-1}, {i+1, j-1}},   -- left center
+            {{i+1, j-1}, {i+2, j-1}},   -- left bottom
+        },
+        right = {
+            {{i-1, j+1}, {i-1, j+2}},   -- top right
+            {{i+1, j+1}, {i+1, j+2}},   -- bottom right
+            {{i,   j+2}, {i,   j+3}},   -- line right
+            {{i-1, j+1}, {i-2, j+1}},   -- right top
+            {{i-1, j+1}, {i+1, j+1}},   -- right center
+            {{i+1, j+1}, {i+2, j+1}},   -- right bottom
+        },
+        up = {
+            {{i-1, j-2}, {i-1, j-1}},   -- top left
+            {{i-1, j-1}, {i-1, j+1}},   -- top center
+            {{i-1, j+1}, {i-1, j+2}},   -- top right
+            {{i-1, j-1}, {i-2, j-1}},   -- left top
+            {{i-1, j+1}, {i-2, j+1}},   -- right top
+            {{i-2, j},   {i-3, j}},     -- line top
+        },
+        down = {
+            {{i+1, j-2}, {i+1, j-1}},   -- bottom left
+            {{i+1, j-1}, {i+1, j+1}},   -- bottom center
+            {{i+1, j+1}, {i+1, j+2}},   -- bottom right
+            {{i+1, j-1}, {i+2, j-1}},   -- left bottom
+            {{i+1, j+1}, {i+2, j+1}},   -- right bottom
+            {{i+2, j},   {i+3, j}},     -- line bottom
+        },
+        all = {
+            -- vertical
+            {{i-1, j-2}, {i-1, j-1}},   -- top left
+            {{i-1, j-1}, {i-1, j+1}},   -- top center
+            {{i-1, j+1}, {i-1, j+2}},   -- top right
+            {{i+1, j-2}, {i+1, j-1}},   -- bottom left
+            {{i+1, j-1}, {i+1, j+1}},   -- bottom center
+            {{i+1, j+1}, {i+1, j+2}},   -- bottom right
+            {{i,   j-2}, {i,   j-3}},   -- line left
+            {{i,   j+2}, {i,   j+3}},   -- line right
+            --horizontal
+            {{i-1, j-1}, {i-2, j-1}},   -- left top
+            {{i-1, j-1}, {i+1, j-1}},   -- left center
+            {{i+1, j-1}, {i+2, j-1}},   -- left bottom
+            {{i-1, j+1}, {i-2, j+1}},   -- right top
+            {{i-1, j+1}, {i+1, j+1}},   -- right center
+            {{i+1, j+1}, {i+2, j+1}},   -- right bottom
+            {{i-2, j},   {i-3, j}},     -- line top
+            {{i+2, j},   {i+3, j}},     -- line bottom
+        }
+    }
+
+    local couples = direction ~= nil and allcouples[direction] or allcouples.all
+    local validCouples = table.filter(couples, function(couple)
+        return areValidAddresses(couple, {#board[1], #board})
+    end)
+
+    local potentialsMathecs = table.map(validCouples, function(c)
+        return { board[c[1][1]][c[1][2]], board[c[2][1]][c[2][2]] }
+    end)
+
+    return potentialsMathecs
+end
+
+function hasPotentialMatch(couples, color)
+    return table.reduce(couples, function(hasMatch, couple)
+        -- print(couple[1].color, couple[2].color, color)
+        return hasMatch or (couple[1].color == color and couple[2].color == color)
+    end, false)
+end
+
 Board = Class{}
 
 function Board:init(x, y, level, colors)
@@ -100,7 +185,6 @@ function Board:initializeTiles()
             table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(self.colors), math.random(1, self.maxLevel)))
         end
     end
-
     while self:calculateMatches() do
 
         -- recursively initialize if matches were returned so we always have
@@ -130,6 +214,24 @@ function Board:calculateMatches()
     return #self.matches > 0 and self.matches or false
 end
 
+function Board:hasPotentialMatches(tile, direction)
+    if not tile then return false end
+    local potentials = getPotentials({ tile.gridY, tile.gridX }, self.tiles, direction)
+
+    return hasPotentialMatch(potentials, tile.color)
+end
+
+function Board:hasMatches()
+    for i = 1, 8 do
+        for j = 1, 8 do
+            if (self:hasPotentialMatches(self.tiles[i][j])) then
+                return true
+            end
+        end
+    end
+
+    return false
+end
 --[[
     Remove the matches from the Board by just setting the Tile slots within
     them to nil, then setting self.matches to nil.
@@ -144,6 +246,15 @@ function Board:removeMatches()
     self.matches = nil
 end
 
+function Board:reset()
+    for i = 1, 8 do
+        for j = 1, 8 do
+            self.tiles[i][j] = nil
+        end
+    end
+
+    return self:getFallingTiles()
+end
 --[[
     Shifts down all of the tiles that now have spaces below them, then returns a table that
     contains tweening information for these new tiles.
