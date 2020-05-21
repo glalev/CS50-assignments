@@ -85,6 +85,7 @@ function getPotentials(address, board, direction)
     local i = address[1]
     local j = address[2]
 
+     -- this is a mess and I hate it, but for the purpose of the assignment it does the job, so I am leaving it
     local allcouples = {
         left = {
             {{i-1, j-2}, {i-1, j-1}},   -- top left
